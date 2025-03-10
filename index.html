@@ -264,6 +264,7 @@ const words = [
     { english: "Forget", portuguese: "Esquecer" },
     { english: "Laugh", portuguese: "Rir" },
     { english: "Cry", portuguese: "Chorar" },
+    { english: "Love", portuguese: "Amar" },
     { english: "Hate", portuguese: "Odiar" },
     { english: "Happy", portuguese: "Feliz" },
     { english: "Sad", portuguese: "Triste" },
@@ -332,123 +333,133 @@ const words = [
     { english: "Contest", portuguese: "Concurso" }
 ];
 
-        let currentWord = {};
-        let score = 0;
-        let obstacleInterval;
-        let obstacleSpeed = 0.5;  // Reduzimos a velocidade do tubarão
-        let timer = 30;
-        let timerInterval;
-        let gameDuration = 30;
+let currentWord = {};
+let score = 0;
+let obstacleInterval;
+let obstacleSpeed = 0.5;  // Reduzimos a velocidade do tubarão
+let timer = 30;
+let timerInterval;
+let gameDuration = 30;
 
-        let gameStarted = false;
+let gameStarted = false;
 
-        function startGame() {
-            document.getElementById("start-screen").style.display = "none";
-            document.getElementById("game-container").style.display = "block";
-            document.getElementById("score-board").style.display = "block";
-            document.getElementById("timer").style.display = "block";
-            document.getElementById("input-box").style.display = "block";
-            score = 0;
-            document.getElementById("score-board").innerText = `Pontuação: ${score}`;
-            gameStarted = true;
-            startNewRound();
-        }
+function startGame() {
+    document.getElementById("start-screen").style.display = "none";
+    document.getElementById("game-container").style.display = "block";
+    document.getElementById("score-board").style.display = "block";
+    document.getElementById("timer").style.display = "block";
+    document.getElementById("input-box").style.display = "block";
+    score = 0;
+    document.getElementById("score-board").innerText = `Pontuação: ${score}`;
+    gameStarted = true;
+    startNewRound();
+}
 
-        function startNewRound() {
+function startNewRound() {
+    clearInterval(obstacleInterval);
+    clearInterval(timerInterval);
+    currentWord = words[Math.floor(Math.random() * words.length)];
+    document.getElementById("word-box").innerText = "Traduza: " + currentWord.english;
+    document.getElementById("answer").value = "";
+    moveObstacle();
+    startTimer();
+    speakWord(currentWord.english);
+}
+
+// Função para calcular a velocidade proporcional
+function setObstacleSpeed() {
+    const screenWidth = window.innerWidth;
+    obstacleSpeed = screenWidth / 1000;  // Ajuste para garantir a velocidade adequada
+}
+
+function moveObstacle() {
+    setObstacleSpeed();  // Define a velocidade do tubarão conforme o tamanho da tela
+    let shark = document.getElementById("shark");
+    let position = window.innerWidth;
+    shark.style.left = position + "px";
+    obstacleInterval = setInterval(() => {
+        position -= obstacleSpeed;
+        shark.style.left = position + "px";
+        if (position <= 100) {
             clearInterval(obstacleInterval);
-            clearInterval(timerInterval);
-            currentWord = words[Math.floor(Math.random() * words.length)];
-            document.getElementById("word-box").innerText = "Traduza: " + currentWord.english;
-            document.getElementById("answer").value = "";
-            moveObstacle();
-            startTimer();
-            speakWord(currentWord.english);
+            gameOver();
         }
+    }, 30);
+}
 
-        function moveObstacle() {
-            let shark = document.getElementById("shark");
-            let position = window.innerWidth;
-            shark.style.left = position + "px";
-            obstacleInterval = setInterval(() => {
-                position -= obstacleSpeed;
-                shark.style.left = position + "px";
-                if (position <= 100) {
-                    clearInterval(obstacleInterval);
-                    gameOver();
-                }
-            }, 30);
-        }
+// Chama a função sempre que a janela for redimensionada para ajustar a velocidade
+window.addEventListener('resize', setObstacleSpeed);
 
-        function startTimer() {
-            timer = gameDuration;
+function startTimer() {
+    timer = gameDuration;
+    document.getElementById("timer").innerText = `Tempo: ${timer}`;
+    timerInterval = setInterval(() => {
+        if (timer > 0) {
+            timer--;
             document.getElementById("timer").innerText = `Tempo: ${timer}`;
-            timerInterval = setInterval(() => {
-                if (timer > 0) {
-                    timer--;
-                    document.getElementById("timer").innerText = `Tempo: ${timer}`;
-                } else {
-                    clearInterval(timerInterval);
-                    gameOver();
-                }
-            }, 1000);
+        } else {
+            clearInterval(timerInterval);
+            gameOver();
         }
+    }, 1000);
+}
 
-        function checkAnswer() {
-            let userAnswer = document.getElementById("answer").value.trim();
-            const normalizedAnswer = userAnswer.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            const normalizedCorrectAnswer = currentWord.portuguese.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+function checkAnswer() {
+    let userAnswer = document.getElementById("answer").value.trim();
+    const normalizedAnswer = userAnswer.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const normalizedCorrectAnswer = currentWord.portuguese.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-            if (normalizedAnswer.toLowerCase() === normalizedCorrectAnswer.toLowerCase()) {
-                score++;
-                document.getElementById("score-board").innerText = `Pontuação: ${score}`;
-                showNotification("✅ Correto! O Peixe conseguiu escapar!", "#4CAF50");
-                startNewRound();
-            } else {
-                showNotification("❌ Errado! Tente novamente!", "#f44336");
-            }
-        }
+    if (normalizedAnswer.toLowerCase() === normalizedCorrectAnswer.toLowerCase()) {
+        score++;
+        document.getElementById("score-board").innerText = `Pontuação: ${score}`;
+        showNotification("✅ Correto! O Peixe conseguiu escapar!", "#4CAF50");
+        startNewRound();
+    } else {
+        showNotification("❌ Errado! Tente novamente!", "#f44336");
+    }
+}
 
-        function gameOver() {
-            showNotification("💀 O Peixe foi pego pelo tubarão! Jogo encerrado.", "#f44336");
-            document.getElementById("final-score").innerText = score;
-            document.getElementById("end-screen").style.display = "block";
-            document.getElementById("game-container").style.display = "none";
-            document.getElementById("score-board").style.display = "none";
-            document.getElementById("timer").style.display = "none";
-            document.getElementById("input-box").style.display = "none";
-            gameStarted = false;
-        }
+function gameOver() {
+    showNotification("💀 O Peixe foi pego pelo tubarão! Jogo encerrado.", "#f44336");
+    document.getElementById("final-score").innerText = score;
+    document.getElementById("end-screen").style.display = "block";
+    document.getElementById("game-container").style.display = "none";
+    document.getElementById("score-board").style.display = "none";
+    document.getElementById("timer").style.display = "none";
+    document.getElementById("input-box").style.display = "none";
+    gameStarted = false;
+}
 
-        function restartGame() {
-            document.getElementById("end-screen").style.display = "none";
-            startGame();
-        }
+function restartGame() {
+    document.getElementById("end-screen").style.display = "none";
+    startGame();
+}
 
-        function showNotification(message, color) {
-            let notification = document.getElementById("notification");
-            notification.innerText = message;
-            notification.style.background = color;
-            notification.style.display = "block";
-            setTimeout(() => {
-                notification.style.display = "none";
-            }, 2000);
-        }
+function showNotification(message, color) {
+    let notification = document.getElementById("notification");
+    notification.innerText = message;
+    notification.style.background = color;
+    notification.style.display = "block";
+    setTimeout(() => {
+        notification.style.display = "none";
+    }, 2000);
+}
 
-        function speakWord(word) {
-            const utterance = new SpeechSynthesisUtterance(word);
-            const voices = speechSynthesis.getVoices();
-            const femaleVoice = voices.find(voice => voice.name.toLowerCase().includes("female"));
-            if (femaleVoice) {
-                utterance.voice = femaleVoice;
-            }
-            speechSynthesis.speak(utterance);
-        }
+function speakWord(word) {
+    const utterance = new SpeechSynthesisUtterance(word);
+    const voices = speechSynthesis.getVoices();
+    const femaleVoice = voices.find(voice => voice.name.toLowerCase().includes("female"));
+    if (femaleVoice) {
+        utterance.voice = femaleVoice;
+    }
+    speechSynthesis.speak(utterance);
+}
 
-        document.getElementById("answer").addEventListener("keyup", function(event) {
-            if (event.key === "Enter") {
-                checkAnswer();
-            }
-        });
+document.getElementById("answer").addEventListener("keyup", function(event) {
+    if (event.key === "Enter") {
+        checkAnswer();
+    }
+});
     </script>
     <footer>Desenvolvido por Natanael Carvalho</footer>
 </body>
