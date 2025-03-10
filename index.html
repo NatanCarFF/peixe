@@ -336,7 +336,7 @@ const words = [
 let currentWord = {};
 let score = 0;
 let obstacleInterval;
-let obstacleSpeed = 0.5;  // Reduzimos a velocidade do tubarão
+let obstacleSpeed;
 let timer = 30;
 let timerInterval;
 let gameDuration = 30;
@@ -366,28 +366,28 @@ function startNewRound() {
     speakWord(currentWord.english);
 }
 
-// Função para calcular a velocidade proporcional
 function setObstacleSpeed() {
     const screenWidth = window.innerWidth;
-    obstacleSpeed = screenWidth / 1000;  // Ajuste para garantir a velocidade adequada
+    const timeToReach = 30; // 30 segundos
+    obstacleSpeed = screenWidth / timeToReach / 1000; // Divide pela quantidade de segundos
 }
 
 function moveObstacle() {
-    setObstacleSpeed();  // Define a velocidade do tubarão conforme o tamanho da tela
+    setObstacleSpeed(); // Define a velocidade do tubarão conforme o tamanho da tela
     let shark = document.getElementById("shark");
     let position = window.innerWidth;
     shark.style.left = position + "px";
     obstacleInterval = setInterval(() => {
-        position -= obstacleSpeed;
+        position -= obstacleSpeed * 10; // Ajuste de velocidade por intervalo
         shark.style.left = position + "px";
         if (position <= 100) {
             clearInterval(obstacleInterval);
             gameOver();
         }
-    }, 30);
+    }, 10);
 }
 
-// Chama a função sempre que a janela for redimensionada para ajustar a velocidade
+// Ajusta a velocidade sempre que a janela for redimensionada
 window.addEventListener('resize', setObstacleSpeed);
 
 function startTimer() {
