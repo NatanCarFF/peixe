@@ -117,6 +117,35 @@
         .start-screen button:hover, .end-screen button:hover {
             background-color: #45a049;
         }
+
+        /* Ajustes para celular */
+        @media (max-width: 600px) {
+            body {
+                font-family: Arial, sans-serif;
+            }
+            .word-box {
+                font-size: 18px;
+            }
+            .fish {
+                font-size: 40px;
+            }
+            .shark {
+                font-size: 40px;
+            }
+            .score-board, .timer {
+                font-size: 18px;
+            }
+            .input-box input {
+                font-size: 16px;
+            }
+            .input-box button {
+                font-size: 16px;
+            }
+            .start-screen button, .end-screen button {
+                font-size: 16px;
+                padding: 10px 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -235,7 +264,6 @@ const words = [
     { english: "Forget", portuguese: "Esquecer" },
     { english: "Laugh", portuguese: "Rir" },
     { english: "Cry", portuguese: "Chorar" },
-    { english: "Love", portuguese: "Amar" },
     { english: "Hate", portuguese: "Odiar" },
     { english: "Happy", portuguese: "Feliz" },
     { english: "Sad", portuguese: "Triste" },
@@ -303,15 +331,15 @@ const words = [
     { english: "Champion", portuguese: "Campeão" },
     { english: "Contest", portuguese: "Concurso" }
 ];
-        
+
         let currentWord = {};
         let score = 0;
         let obstacleInterval;
-        let obstacleSpeed = 1;
+        let obstacleSpeed = 0.5;  // Reduzimos a velocidade do tubarão
         let timer = 30;
         let timerInterval;
         let gameDuration = 30;
-        
+
         let gameStarted = false;
 
         function startGame() {
@@ -341,7 +369,6 @@ const words = [
             let shark = document.getElementById("shark");
             let position = window.innerWidth;
             shark.style.left = position + "px";
-            obstacleSpeed = (gameDuration / 30) * 2;
             obstacleInterval = setInterval(() => {
                 position -= obstacleSpeed;
                 shark.style.left = position + "px";
@@ -423,6 +450,6 @@ const words = [
             }
         });
     </script>
-        <footer>Desenvolvido por Natanael Carvalho</footer>
+    <footer>Desenvolvido por Natanael Carvalho</footer>
 </body>
 </html>
