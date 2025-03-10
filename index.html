@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo do Peixe Tradutor</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 300px;
+            border-bottom: 5px solid #333;
+            background: linear-gradient(to bottom, #87CEEB, #ffcc66);
+            overflow: hidden;
+            display: none;
+        }
+        .fish {
+            font-size: 50px;
+            position: absolute;
+            bottom: 10px;
+            left: 50px;
+        }
+        .shark {
+            font-size: 50px;
+            position: absolute;
+            bottom: 10px;
+            left: 100vw;
+            transition: left 0.1s linear;
+        }
+        .word-box {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            background: #fff;
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .input-box {
+            margin-top: 20px;
+            display: none;
+        }
+        input {
+            font-size: 18px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        button {
+            font-size: 18px;
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ffeb3b;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            display: none;
+            font-size: 18px;
+        }
+        .score-board {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+            color: #333;
+        }
+        .timer {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            color: #333;
+        }
+        .start-screen, .end-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 10px;
+            color: white;
+            display: block;
+        }
+        .start-screen button, .end-screen button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .start-screen button:hover, .end-screen button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Jogo do Peixe Tradutor 🐟</h1>
+    <div class="start-screen" id="start-screen">
+        <h2>Bem-vindo ao Jogo do Peixe Tradutor!</h2>
+        <p>Desafie-se a traduzir palavras enquanto evita o tubarão!</p>
+        <button onclick="startGame()">Iniciar Jogo</button>
+    </div>
+    <div class="end-screen" id="end-screen" style="display: none;">
+        <h2>Game Over!</h2>
+        <p>Você perdeu! Sua pontuação foi: <span id="final-score"></span></p>
+        <button onclick="restartGame()">Reiniciar Jogo</button>
+    </div>
+    <div class="game-container" id="game-container">
+        <div class="word-box" id="word-box">Traduza: </div>
+        <div class="fish" id="fish">🐟</div>
+        <div class="shark" id="shark">🦈</div>
+    </div>
+    <div class="input-box" id="input-box">
+        <input type="text" id="answer" placeholder="Digite a tradução...">
+        <button onclick="checkAnswer()">Enviar</button>
+    </div>
+    <div class="notification" id="notification"></div>
+    <div class="score-board" id="score-board">Pontuação: 0</div>
+    <div class="timer" id="timer">Tempo: 30</div>
+
+    <script>
+const words = [
+    { english: "Hello", portuguese: "Olá" },
+    { english: "Goodbye", portuguese: "Adeus" },
+    { english: "Thank you", portuguese: "Obrigado" },
+    { english: "Please", portuguese: "Por favor" },
+    { english: "Sorry", portuguese: "Desculpa" },
+    { english: "Yes", portuguese: "Sim" },
+    { english: "No", portuguese: "Não" },
+    { english: "Friend", portuguese: "Amigo" },
+    { english: "Family", portuguese: "Família" },
+    { english: "Water", portuguese: "Água" },
+    { english: "Food", portuguese: "Comida" },
+    { english: "House", portuguese: "Casa" },
+    { english: "School", portuguese: "Escola" },
+    { english: "Work", portuguese: "Trabalho" },
+    { english: "Morning", portuguese: "Manhã" },
+    { english: "Night", portuguese: "Noite" },
+    { english: "Love", portuguese: "Amor" },
+    { english: "Happiness", portuguese: "Felicidade" },
+    { english: "Help", portuguese: "Ajuda" },
+    { english: "Music", portuguese: "Música" },
+    { english: "Animal", portuguese: "Animal" },
+    { english: "Car", portuguese: "Carro" },
+    { english: "Sun", portuguese: "Sol" },
+    { english: "Moon", portuguese: "Lua" },
+    { english: "Rain", portuguese: "Chuva" },
+    { english: "Snow", portuguese: "Neve" },
+    { english: "Tree", portuguese: "Árvore" },
+    { english: "Flower", portuguese: "Flor" },
+    { english: "Bird", portuguese: "Pássaro" },
+    { english: "Fish", portuguese: "Peixe" },
+    { english: "Book", portuguese: "Livro" },
+    { english: "Ball", portuguese: "Bola" },
+    { english: "Chair", portuguese: "Cadeira" },
+    { english: "Table", portuguese: "Mesa" },
+    { english: "Pen", portuguese: "Caneta" },
+    { english: "Pencil", portuguese: "Lápis" },
+    { english: "Notebook", portuguese: "Caderno" },
+    { english: "Paper", portuguese: "Papel" },
+    { english: "Computer", portuguese: "Computador" },
+    { english: "Phone", portuguese: "Telefone" },
+    { english: "Window", portuguese: "Janela" },
+    { english: "Door", portuguese: "Porta" },
+    { english: "Shoes", portuguese: "Sapatos" },
+    { english: "Shirt", portuguese: "Camisa" },
+    { english: "Pants", portuguese: "Calças" },
+    { english: "Dress", portuguese: "Vestido" },
+    { english: "Hat", portuguese: "Chapéu" },
+    { english: "Glove", portuguese: "Luva" },
+    { english: "Coat", portuguese: "Casaco" },
+    { english: "Socks", portuguese: "Meias" },
+    { english: "Belt", portuguese: "Cinto" },
+    { english: "Toothbrush", portuguese: "Escova de dentes" },
+    { english: "Toothpaste", portuguese: "Creme dental" },
+    { english: "Soap", portuguese: "Sabão" },
+    { english: "Shampoo", portuguese: "Shampoo" },
+    { english: "Towel", portuguese: "Toalha" },
+    { english: "Hair", portuguese: "Cabelo" },
+    { english: "Head", portuguese: "Cabeça" },
+    { english: "Eye", portuguese: "Olho" },
+    { english: "Ear", portuguese: "Orelha" },
+    { english: "Mouth", portuguese: "Boca" },
+    { english: "Nose", portuguese: "Nariz" },
+    { english: "Teeth", portuguese: "Dentes" },
+    { english: "Hand", portuguese: "Mão" },
+    { english: "Finger", portuguese: "Dedo" },
+    { english: "Leg", portuguese: "Perna" },
+    { english: "Foot", portuguese: "Pé" },
+    { english: "Knee", portuguese: "Joelho" },
+    { english: "Elbow", portuguese: "Cotovelo" },
+    { english: "Stomach", portuguese: "Estômago" },
+    { english: "Heart", portuguese: "Coração" },
+    { english: "Back", portuguese: "Costas" },
+    { english: "Sleep", portuguese: "Dormir" },
+    { english: "Eat", portuguese: "Comer" },
+    { english: "Drink", portuguese: "Beber" },
+    { english: "Run", portuguese: "Correr" },
+    { english: "Walk", portuguese: "Andar" },
+    { english: "Jump", portuguese: "Pular" },
+    { english: "Sit", portuguese: "Sentar" },
+    { english: "Stand", portuguese: "Ficar em pé" },
+    { english: "Talk", portuguese: "Falar" },
+    { english: "Listen", portuguese: "Ouvir" },
+    { english: "See", portuguese: "Ver" },
+    { english: "Look", portuguese: "Olhar" },
+    { english: "Think", portuguese: "Pensar" },
+    { english: "Remember", portuguese: "Lembrar" },
+    { english: "Forget", portuguese: "Esquecer" },
+    { english: "Laugh", portuguese: "Rir" },
+    { english: "Cry", portuguese: "Chorar" },
+    { english: "Love", portuguese: "Amar" },
+    { english: "Hate", portuguese: "Odiar" },
+    { english: "Happy", portuguese: "Feliz" },
+    { english: "Sad", portuguese: "Triste" },
+    { english: "Angry", portuguese: "Bravo" },
+    { english: "Scared", portuguese: "Assustado" },
+    { english: "Excited", portuguese: "Empolgado" },
+    { english: "Bored", portuguese: "Entediado" },
+    { english: "Tired", portuguese: "Cansado" },
+    { english: "Hot", portuguese: "Quente" },
+    { english: "Cold", portuguese: "Frio" },
+    { english: "Big", portuguese: "Grande" },
+    { english: "Small", portuguese: "Pequeno" },
+    { english: "Tall", portuguese: "Alto" },
+    { english: "Short", portuguese: "Baixo" },
+    { english: "Heavy", portuguese: "Pesado" },
+    { english: "Light", portuguese: "Leve" },
+    { english: "Fast", portuguese: "Rápido" },
+    { english: "Slow", portuguese: "Lento" },
+    { english: "Old", portuguese: "Velho" },
+    { english: "Young", portuguese: "Jovem" },
+    { english: "Beautiful", portuguese: "Bonito" },
+    { english: "Ugly", portuguese: "Feio" },
+    { english: "Strong", portuguese: "Forte" },
+    { english: "Weak", portuguese: "Fraco" },
+    { english: "Clean", portuguese: "Limpo" },
+    { english: "Dirty", portuguese: "Sujo" },
+    { english: "Rich", portuguese: "Rico" },
+    { english: "Poor", portuguese: "Pobre" },
+    { english: "Near", portuguese: "Perto" },
+    { english: "Far", portuguese: "Longe" },
+    { english: "Right", portuguese: "Certo" },
+    { english: "Wrong", portuguese: "Errado" },
+    { english: "Open", portuguese: "Abrir" },
+    { english: "Close", portuguese: "Fechar" },
+    { english: "Start", portuguese: "Começar" },
+    { english: "Stop", portuguese: "Parar" },
+    { english: "Finish", portuguese: "Terminar" },
+    { english: "Buy", portuguese: "Comprar" },
+    { english: "Sell", portuguese: "Vender" },
+    { english: "Give", portuguese: "Dar" },
+    { english: "Take", portuguese: "Pegar" },
+    { english: "Pay", portuguese: "Pagar" },
+    { english: "Win", portuguese: "Vencer" },
+    { english: "Lose", portuguese: "Perder" },
+    { english: "Laugh", portuguese: "Rir" },
+    { english: "Cry", portuguese: "Chorar" },
+    { english: "Wait", portuguese: "Esperar" },
+    { english: "Leave", portuguese: "Deixar" },
+    { english: "Arrive", portuguese: "Chegar" },
+    { english: "Send", portuguese: "Enviar" },
+    { english: "Receive", portuguese: "Receber" },
+    { english: "Ask", portuguese: "Perguntar" },
+    { english: "Answer", portuguese: "Responder" },
+    { english: "Question", portuguese: "Pergunta" },
+    { english: "Answer", portuguese: "Resposta" },
+    { english: "Dream", portuguese: "Sonho" },
+    { english: "Idea", portuguese: "Ideia" },
+    { english: "Problem", portuguese: "Problema" },
+    { english: "Solution", portuguese: "Solução" },
+    { english: "Game", portuguese: "Jogo" },
+    { english: "Sport", portuguese: "Esporte" },
+    { english: "Team", portuguese: "Time" },
+    { english: "Victory", portuguese: "Vitória" },
+    { english: "Defeat", portuguese: "Derrota" },
+    { english: "Champion", portuguese: "Campeão" },
+    { english: "Contest", portuguese: "Concurso" }
+];
+        
+        let currentWord = {};
+        let score = 0;
+        let obstacleInterval;
+        let obstacleSpeed = 1;
+        let timer = 30;
+        let timerInterval;
+        let gameDuration = 30;
+        
+        let gameStarted = false;
+
+        function startGame() {
+            document.getElementById("start-screen").style.display = "none";
+            document.getElementById("game-container").style.display = "block";
+            document.getElementById("score-board").style.display = "block";
+            document.getElementById("timer").style.display = "block";
+            document.getElementById("input-box").style.display = "block";
+            score = 0;
+            document.getElementById("score-board").innerText = `Pontuação: ${score}`;
+            gameStarted = true;
+            startNewRound();
+        }
+
+        function startNewRound() {
+            clearInterval(obstacleInterval);
+            clearInterval(timerInterval);
+            currentWord = words[Math.floor(Math.random() * words.length)];
+            document.getElementById("word-box").innerText = "Traduza: " + currentWord.english;
+            document.getElementById("answer").value = "";
+            moveObstacle();
+            startTimer();
+            speakWord(currentWord.english);
+        }
+
+        function moveObstacle() {
+            let shark = document.getElementById("shark");
+            let position = window.innerWidth;
+            shark.style.left = position + "px";
+            obstacleSpeed = (gameDuration / 30) * 2;
+            obstacleInterval = setInterval(() => {
+                position -= obstacleSpeed;
+                shark.style.left = position + "px";
+                if (position <= 100) {
+                    clearInterval(obstacleInterval);
+                    gameOver();
+                }
+            }, 30);
+        }
+
+        function startTimer() {
+            timer = gameDuration;
+            document.getElementById("timer").innerText = `Tempo: ${timer}`;
+            timerInterval = setInterval(() => {
+                if (timer > 0) {
+                    timer--;
+                    document.getElementById("timer").innerText = `Tempo: ${timer}`;
+                } else {
+                    clearInterval(timerInterval);
+                    gameOver();
+                }
+            }, 1000);
+        }
+
+        function checkAnswer() {
+            let userAnswer = document.getElementById("answer").value.trim();
+            const normalizedAnswer = userAnswer.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const normalizedCorrectAnswer = currentWord.portuguese.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+            if (normalizedAnswer.toLowerCase() === normalizedCorrectAnswer.toLowerCase()) {
+                score++;
+                document.getElementById("score-board").innerText = `Pontuação: ${score}`;
+                showNotification("✅ Correto! O Peixe conseguiu escapar!", "#4CAF50");
+                startNewRound();
+            } else {
+                showNotification("❌ Errado! Tente novamente!", "#f44336");
+            }
+        }
+
+        function gameOver() {
+            showNotification("💀 O Peixe foi pego pelo tubarão! Jogo encerrado.", "#f44336");
+            document.getElementById("final-score").innerText = score;
+            document.getElementById("end-screen").style.display = "block";
+            document.getElementById("game-container").style.display = "none";
+            document.getElementById("score-board").style.display = "none";
+            document.getElementById("timer").style.display = "none";
+            document.getElementById("input-box").style.display = "none";
+            gameStarted = false;
+        }
+
+        function restartGame() {
+            document.getElementById("end-screen").style.display = "none";
+            startGame();
+        }
+
+        function showNotification(message, color) {
+            let notification = document.getElementById("notification");
+            notification.innerText = message;
+            notification.style.background = color;
+            notification.style.display = "block";
+            setTimeout(() => {
+                notification.style.display = "none";
+            }, 2000);
+        }
+
+        function speakWord(word) {
+            const utterance = new SpeechSynthesisUtterance(word);
+            const voices = speechSynthesis.getVoices();
+            const femaleVoice = voices.find(voice => voice.name.toLowerCase().includes("female"));
+            if (femaleVoice) {
+                utterance.voice = femaleVoice;
+            }
+            speechSynthesis.speak(utterance);
+        }
+
+        document.getElementById("answer").addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                checkAnswer();
+            }
+        });
+    </script>
+</body>
+</html>
